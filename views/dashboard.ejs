@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Waiteu Genius</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="/socket.io/socket.io.js"></script> 
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        /* DEFINISI VARIABEL CSS (Sama seperti file UI asli) */
+        :root {
+            --background: #ffebf2;
+            --foreground: #1a1a1a;
+            --card: #ffffff;
+            --card-foreground: #1a1a1a;
+            --popover: #ffffff;
+            --popover-foreground: #1a1a1a;
+            --primary: #c81d25;
+            --primary-foreground: #ffffff;
+            --secondary: #d98fa3;
+            --secondary-foreground: #ffffff;
+            --muted: #f2c5d5;
+            --muted-foreground: #666666;
+            --accent: #d93845;
+            --accent-foreground: #ffffff;
+            --destructive: #d93845;
+            --destructive-foreground: #ffffff;
+            --border: #f2c5d5;
+            --input: #ffffff;
+            --ring: #d93845;
+            --radius: 0.5rem;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--background);
+            color: var(--foreground);
+        }
+
+        /* Format text WA (bold, italic code) styles */
+        .msg-content b { font-weight: bold; }
+        .msg-content i { font-style: italic; }
+        .msg-content strike { text-decoration: line-through; }
+        .msg-content code { background: rgba(0,0,0,0.1); padding: 2px 4px; border-radius: 4px; font-family: monospace; }
+
+        /* Utility classes mapping */
+        .bg-background { background-color: var(--background); }
+        .text-foreground { color: var(--foreground); }
+        .bg-card { background-color: var(--card); }
+        .border-border { border-color: var(--border); }
+        .text-primary { color: var(--primary); }
+        .bg-muted { background-color: var(--muted); }
+        .text-muted-foreground { color: var(--muted-foreground); }
+        .bg-primary { background-color: var(--primary); }
+        .text-primary-foreground { color: var(--primary-foreground); }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background-color: var(--muted-foreground); border-radius: 20px; opacity: 0.5; }
+    </style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        border: 'var(--border)',
+                        input: 'var(--input)',
+                        ring: 'var(--ring)',
+                        background: 'var(--background)',
+                        foreground: 'var(--foreground)',
+                        primary: { DEFAULT: 'var(--primary)', foreground: 'var(--primary-foreground)' },
+                        muted: { DEFAULT: 'var(--muted)', foreground: 'var(--muted-foreground)' },
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="h-screen overflow-hidden flex flex-col antialiased">
+
+    <div id="app" class="flex h-screen bg-background">
+        <div class="w-full md:w-80 border-r border-border flex flex-col bg-card" id="sidebar">
+            <div class="p-4 border-b border-border">
+                <h1 class="text-2xl font-bold text-primary mb-4">Waiteu Genius</h1>
+
+                <div class="relative">
+                    <input id="search-input" type="text" placeholder="Cari Kontak" class="w-full px-4 py-2 rounded-full bg-muted text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary">
+                    <svg class="absolute right-3 top-2.5 w-4 h-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                </div>
+            </div>
+            <div id="contacts-list" class="flex-1 overflow-y-auto">
+                <div class="p-4 text-center text-muted-foreground">Loading contacts...</div>
+            </div>
+        </div>
+
+        <div class="hidden md:flex flex-1 flex-col bg-background relative" id="chat-area">
+            <div id="no-chat-selected" class="flex-1 flex items-center justify-center">
+                <div class="text-center">
+                    <div class="w-32 h-32 rounded-full bg-muted mx-auto mb-4 flex items-center justify-center">
+                        <svg class="w-16 h-16 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                        </svg>
+                    </div>
+                    <h2 class="text-2xl font-bold text-foreground mb-2">Pilih Kontak</h2>
+                    <p class="text-muted-foreground">Silahkan pilih kontak untuk melihat histori percakapan</p>
+                </div>
+            </div>
+
+            <div id="active-chat" class="hidden flex-col h-full w-full">
+                <div class="flex items-center gap-3 p-4 border-b border-border bg-card">
+                    <button id="back-button" class="md:hidden mr-2">
+                        <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                    </button>
+                    <img id="chat-header-avatar" src="" alt="" class="w-10 h-10 rounded-full object-cover bg-muted">
+                    <div>
+                        <h2 id="chat-header-name" class="font-semibold text-foreground"></h2>
+                        <p id="chat-header-sub" class="text-xs text-muted-foreground"></p>
+                    </div>
+                </div>
+
+                <div id="messages-container" class="flex-1 overflow-y-auto p-4 space-y-4">
+                    </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- CONFIG & STATE ---
+        const socket = io();
+        let currentWaId = null;
+        let cachedContacts = [];
+
+        // DOM Elements
+        const contactsListEl = document.getElementById('contacts-list');
+        const chatAreaEl = document.getElementById('chat-area');
+        const sidebarEl = document.getElementById('sidebar');
+        const noChatEl = document.getElementById('no-chat-selected');
+        const activeChatEl = document.getElementById('active-chat');
+        const chatHeaderNameEl = document.getElementById('chat-header-name');
+        const chatHeaderSubEl = document.getElementById('chat-header-sub');
+        const chatHeaderAvatarEl = document.getElementById('chat-header-avatar');
+        const messagesContainerEl = document.getElementById('messages-container');
+        const backButtonEl = document.getElementById('back-button');
+
+        // --- UTILS ---
+
+        // Fungsi Global untuk handle klik Read More
+        window.toggleReadMore = function(uniqueId) {
+            const shortEl = document.getElementById(`short-${uniqueId}`);
+            const fullEl = document.getElementById(`full-${uniqueId}`);
+            if (shortEl && fullEl) {
+                shortEl.style.display = 'none';
+                fullEl.style.display = 'inline';
+            }
+        }
+
+        // Fungsi memproses teks panjang
+        function processLongMessage(text) {
+            if (!text) return "";
+            
+            const LIMIT = 700; 
+            
+            if (text.length <= LIMIT) {
+                return formatWhatsAppText(text);
+            }
+
+            const uid = Math.random().toString(36).substr(2, 9);
+            const formattedFull = formatWhatsAppText(text);
+            const formattedShort = formatWhatsAppText(text.substring(0, LIMIT));
+
+            return `
+                <span id="short-${uid}">
+                    ${formattedShort}... 
+                    <span 
+                        onclick="toggleReadMore('${uid}')" 
+                        class="font-bold cursor-pointer hover:underline ml-1"
+                    >Read more</span>
+                </span>
+                <span id="full-${uid}" style="display: none;">
+                    ${formattedFull}
+                </span>
+            `;
+        }
+
+        // Helper: Format Text WA (Bold, Italic, Code, dll)
+        function formatWhatsAppText(text) {
+            if (!text) return "";
+            let formatted = text
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;");
+            formatted = formatted.replace(/```(.*?)```/g, '<code>$1</code>');
+            formatted = formatted.replace(/\*([^\s](?:[\s\S]*?[^\s])?)\*/g, '<b>$1</b>');
+            formatted = formatted.replace(/(?<!\w)_([^\s](?:[\s\S]*?[^\s])?)_(?!\w)/g, '<i>$1</i>');
+            formatted = formatted.replace(/~([^\s](?:[\s\S]*?[^\s])?)~/g, '<strike>$1</strike>');
+            formatted = formatted.replace(/\n/g, '<br>');
+            return formatted;
+        }
+
+        // Helper: Format Tanggal untuk Sidebar
+        function formatTimeForSidebar(dateString) {
+            if (!dateString) return '';
+            const date = new Date(dateString);
+            const now = new Date();
+            const diffDays = Math.floor((now - date) / (1000 * 60 * 60 * 24));
+            
+            if (diffDays === 0) {
+                return date.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+            } else if (diffDays === 1) {
+                return "Yesterday";
+            } else {
+                return date.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
+            }
+        }
+
+        // Helper: Grouping Tanggal untuk Chat Bubble
+        function getDateLabel(date) {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const messageDate = new Date(date);
+            messageDate.setHours(0, 0, 0, 0);
+
+            const diffTime = today.getTime() - messageDate.getTime();
+            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+            if (diffDays === 0) return "Hari Ini";
+            if (diffDays === 1) return "Kemarin";
+            
+            const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+            return `${messageDate.getDate()} ${monthNames[messageDate.getMonth()]} ${messageDate.getFullYear()}`;
+        }
+
+        function groupMessagesByDate(messages) {
+            const grouped = new Map();
+            messages.forEach((message) => {
+                const dateLabel = getDateLabel(message.timestamp);
+                if (!grouped.has(dateLabel)) {
+                    grouped.set(dateLabel, []);
+                }
+                grouped.get(dateLabel).push(message);
+            });
+            return grouped;
+        }
+
+        // --- SOCKET.IO LISTENERS ---
+        
+        // 1. Pesan Baru
+        socket.on('new_message', (msg) => {
+            // Jika pesan datang dari kontak yang SEDANG dibuka
+            if (currentWaId && (msg.contactWaId === currentWaId)) {
+                // Tambahkan pesan ke UI Chat secara langsung
+                appendSingleMessageToUI(msg);
+                // Mark read
+                fetch(`/dashboard/api/messages/mark-read/${currentWaId}`, { method: 'POST' }).catch(e => console.error(e));
+            } else {
+                // Jika dari kontak lain, refresh sidebar list (agar badge unread muncul)
+                loadContacts();
+            }
+        });
+
+        // 2. Update Kontak
+        socket.on('update_contact', () => {
+            loadContacts();
+        });
+
+        // --- CORE FUNCTIONS (FETCHING) ---
+
+        // FETCH CONTACTS
+        async function loadContacts() {
+            try {
+                const res = await fetch('/dashboard/api/contacts');
+                const contacts = await res.json();
+                cachedContacts = contacts; // Simpan di cache lokal
+                renderContacts(contacts);
+            } catch (err) {
+                console.error("Failed to load contacts:", err);
+                contactsListEl.innerHTML = '<div class="p-4 text-center text-red-500">Failed to load contacts</div>';
+            }
+        }
+
+        function renderContacts(contacts) {
+            contactsListEl.innerHTML = '';
+            
+            if (contacts.length === 0) {
+                contactsListEl.innerHTML = '<div class="p-4 text-center text-muted-foreground">No contacts yet</div>';
+                return;
+            }
+
+            contacts.forEach(contact => {
+                const isActive = currentWaId === contact.waId;
+                const div = document.createElement('div');
+                div.className = `flex gap-3 p-3 cursor-pointer transition-all border-b border-border hover:bg-muted ${isActive ? "bg-muted" : ""}`;
+                div.onclick = () => selectContact(contact);
+
+                // Avatar fallback
+                const avatarUrl = contact.profilePic || `https://ui-avatars.com/api/?name=${contact.name || contact.waId}&background=random`;
+
+                // Badge Logic
+                const unreadHtml = contact.unreadCount > 0 
+                    ? `<div class="flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold shadow-sm">${contact.unreadCount}</div>`
+                    : '';
+                
+                const timeClass = contact.unreadCount > 0 ? "text-primary font-bold" : "text-muted-foreground";
+
+                let previewMessage = contact.waId; // Default fallback ke nomor jika tidak ada pesan
+
+                // Pastikan object lastMessage ada dari API
+                if (contact.lastMessage) {
+                    // 1. Cek direction (outgoing/incoming)
+                    const direction = (contact.lastMessage.direction || "").toLowerCase();
+                    const isSent = direction === 'outgoing';
+                    const prefix = isSent ? "Bot: " : "";
+
+                    // 2. Ambil isi pesan
+                    let content = contact.lastMessage.text || "";
+
+                    // 3. Handle jika pesan bukan text (misal image/video) tapi tidak ada caption
+                    const type = (contact.lastMessage.type || "text").toLowerCase();
+                    if (type !== 'text' && !content) {
+                        content = `[${type}]`; // Hasil: [image], [video], dll
+                    } else if (type !== 'text' && content) {
+                         content = `📷 ${content}`; // Opsional: Tambah icon jika ada caption
+                    }
+
+                    // 4. Gabungkan
+                    previewMessage = `${prefix}${content}`;
+                }
+
+                div.innerHTML = `
+                    <div class="relative flex-shrink-0">
+                        <img src="${avatarUrl}" alt="${contact.name}" class="w-12 h-12 rounded-full object-cover">
+                    </div>
+
+                    <div class="flex-1 min-w-0 flex flex-col justify-center">
+                        <h3 class="font-semibold text-foreground truncate">${contact.name || contact.waId}</h3>
+                        <p class="text-sm text-muted-foreground truncate mt-0.5">
+                            ${formatWhatsAppText(previewMessage.split('\n')[0])}
+                        </p>
+                    </div>
+
+                    <div class="flex flex-col items-end justify-center gap-1 ml-2">
+                        <span class="text-xs whitespace-nowrap ${timeClass}">${formatTimeForSidebar(contact.lastInteraction)}</span>
+                        <div class="h-5 flex items-center justify-end">
+                            ${unreadHtml}
+                        </div>
+                    </div>
+                `;
+                contactsListEl.appendChild(div);
+            });
+        }
+
+        // SELECT CONTACT
+        async function selectContact(contact) {
+            if (currentWaId === contact.waId) return;
+            currentWaId = contact.waId;
+            
+            // UI Switch (Mobile support)
+            if (window.innerWidth < 768) {
+                sidebarEl.classList.add('hidden');
+                sidebarEl.classList.remove('w-full');
+                chatAreaEl.classList.remove('hidden');
+                chatAreaEl.classList.add('flex');
+            }
+            
+            // Show Chat Area
+            noChatEl.classList.add('hidden');
+            activeChatEl.classList.remove('hidden');
+            activeChatEl.classList.add('flex');
+
+            // Update Header
+            chatHeaderNameEl.textContent = contact.name || contact.waId;
+            chatHeaderSubEl.textContent = contact.waId;
+            chatHeaderAvatarEl.src = contact.profilePic || `https://ui-avatars.com/api/?name=${contact.name || contact.waId}&background=random`;
+
+            // Highlight in sidebar
+            renderContacts(cachedContacts);
+
+            // Load Messages
+            await loadMessages(contact.waId);
+
+            // Mark Read Logic
+            if (contact.unreadCount > 0) {
+                try {
+                    await fetch(`/dashboard/api/messages/mark-read/${contact.waId}`, { method: 'POST' });
+                    // Reset local unread count agar UI responsif
+                    contact.unreadCount = 0;
+                    renderContacts(cachedContacts); 
+                } catch (err) {
+                    console.error("Gagal mark read:", err);
+                }
+            }
+        }
+
+        // FETCH MESSAGES
+        async function loadMessages(waId) {
+            messagesContainerEl.innerHTML = '<div class="flex items-center justify-center h-full text-muted-foreground">Loading messages...</div>';
+            
+            try {
+                const res = await fetch(`/dashboard/api/messages/${waId}`);
+                const messages = await res.json();
+                renderMessages(messages);
+            } catch (err) {
+                console.error(err);
+                messagesContainerEl.innerHTML = '<div class="text-center mt-4 text-red-500">Error loading messages</div>';
+            }
+        }
+
+        function renderMessages(messages) {
+
+            messagesContainerEl.style.visibility = 'hidden';
+            messagesContainerEl.innerHTML = '';
+            
+            if (messages.length === 0) {
+                messagesContainerEl.innerHTML = `
+                    <div class="flex items-center justify-center h-full text-muted-foreground">
+                        <div class="text-center">
+                            <p>No messages yet.</p>
+                        </div>
+                    </div>`;
+                messagesContainerEl.style.visibility = 'visible';
+                return;
+            }
+
+            const groupedMessages = groupMessagesByDate(messages);
+            
+            // Sort keys by date
+            const sortedDateLabels = Array.from(groupedMessages.keys()).sort((a, b) => {
+                const dateA = new Date(messages.find(m => getDateLabel(m.timestamp) === a).timestamp);
+                const dateB = new Date(messages.find(m => getDateLabel(m.timestamp) === b).timestamp);
+                return dateA.getTime() - dateB.getTime();
+            });
+
+            sortedDateLabels.forEach(dateLabel => {
+                // Separator Date
+                const separator = document.createElement('div');
+                separator.className = "flex items-center justify-center gap-3 my-4";
+                separator.innerHTML = `
+                    <div class="flex-1 h-px bg-border"></div>
+                    <span class="text-xs text-muted-foreground font-medium bg-background px-2">${dateLabel}</span>
+                    <div class="flex-1 h-px bg-border"></div>
+                `;
+                messagesContainerEl.appendChild(separator);
+
+                // Message Wrapper
+                const msgsDiv = document.createElement('div');
+                msgsDiv.className = "space-y-2";
+                
+                const msgs = groupedMessages.get(dateLabel);
+                msgs.forEach(msg => {
+                    // Logic from 2nd file: check direction (INCOMING/OUTGOING)
+                    const dir = (msg.direction || "").toLowerCase();
+                    const isSent = dir === 'outgoing';
+
+                    const bubbleWrapper = document.createElement('div');
+                    bubbleWrapper.className = `flex ${isSent ? "justify-end" : "justify-start"} gap-2`;
+                    
+                    const bubble = document.createElement('div');
+                    bubble.className = `max-w-[75%] md:max-w-[75%] px-4 py-2 rounded-2xl ${
+                        isSent ? "bg-primary text-primary-foreground rounded-br-none" : "bg-muted text-foreground rounded-bl-none"
+                    }`;
+                    
+                    const time = new Date(msg.timestamp).toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'});
+                    let content = msg.text ? processLongMessage(msg.text) : '<i>(No Text)</i>';
+
+                    // Check type (IMAGE, etc)
+                    const typeLower = (msg.type || "text").toLowerCase();
+                    if (typeLower !== 'text') {
+                        content = `<span class="text-xs font-bold uppercase block mb-1 opacity-75">[${msg.type}]</span> ${content}`;
+                    }
+
+                    bubble.innerHTML = `
+                        <div class="break-words text-sm msg-content">${content}</div>
+                        <p class="text-[10px] mt-1 opacity-70 text-right">${time}</p>
+                    `;
+                    
+                    bubbleWrapper.appendChild(bubble);
+                    msgsDiv.appendChild(bubbleWrapper);
+                });
+                
+                messagesContainerEl.appendChild(msgsDiv);
+            });
+
+            // [PERBAIKAN UTAMA] 
+            // 1. Pakai scrollIntoView ke elemen terakhir (lebih akurat daripada hitung pixel)
+            const lastMessageElement = messagesContainerEl.lastElementChild;
+            if (lastMessageElement) {
+                lastMessageElement.scrollIntoView({ behavior: "auto", block: "end" });
+            }
+
+            // 2. Tampilkan kembali elemen
+            messagesContainerEl.style.visibility = 'visible';
+
+            // 3. [SAFETY NET] Scroll ulang seketika setelah browser merender layout (0ms delay)
+            // Ini mengatasi masalah teks panjang yang baru 'turun baris' setelah perintah scroll pertama
+            setTimeout(() => {
+                messagesContainerEl.scrollTop = messagesContainerEl.scrollHeight;
+            }, 0);
+            
+            // 4. [SAFETY NET IMAGE] Jika ada gambar, scroll lagi sedikit lebih lama
+            // Opsional: jaga-jaga jika ada gambar yang loadingnya cepat tapi belum selesai
+            setTimeout(() => {
+                messagesContainerEl.scrollTop = messagesContainerEl.scrollHeight;
+            }, 100);
+        }
+
+        // Helper untuk append pesan baru dari Socket tanpa reload semua
+        function appendSingleMessageToUI(msg) {
+            // Cek apakah perlu date separator baru (sederhana: cek elemen terakhir)
+            // Untuk simplifikasi, kita reload saja loadMessages jika ingin rapi, 
+            // tapi untuk performa kita append manual.
+            // Disini kita gunakan cara simple: reloadMessages() agar grouping tanggal aman.
+            // Alternatif: appendChild manual.
+            
+            // Kita fetch ulang saja agar urutan dan tanggal pasti benar
+            loadMessages(currentWaId); 
+        }
+
+        // --- EVENT LISTENERS ---
+
+        // Back button (Mobile)
+        backButtonEl.addEventListener('click', () => {
+            currentWaId = null;
+            sidebarEl.classList.remove('hidden');
+            sidebarEl.classList.add('w-full');
+            chatAreaEl.classList.add('hidden');
+            chatAreaEl.classList.remove('flex');
+            
+            // Reset Layout Desktop logic
+            if (window.innerWidth >= 768) {
+                chatAreaEl.classList.remove('hidden');
+                chatAreaEl.classList.add('flex');
+                noChatEl.classList.remove('hidden');
+                activeChatEl.classList.add('hidden');
+                activeChatEl.classList.remove('flex');
+                sidebarEl.classList.remove('w-full');
+            }
+            renderContacts(cachedContacts);
+        });
+
+        // Window Resize Logic
+        window.addEventListener('resize', () => {
+            if (window.innerWidth >= 768) {
+                sidebarEl.classList.remove('hidden');
+                sidebarEl.classList.remove('w-full');
+                chatAreaEl.classList.remove('hidden');
+                chatAreaEl.classList.add('flex');
+                
+                if (!currentWaId) {
+                    noChatEl.classList.remove('hidden');
+                    activeChatEl.classList.add('hidden');
+                    activeChatEl.classList.remove('flex');
+                } else {
+                    noChatEl.classList.add('hidden');
+                    activeChatEl.classList.remove('hidden');
+                    activeChatEl.classList.add('flex');
+                }
+            } else {
+                if (currentWaId) {
+                    sidebarEl.classList.add('hidden');
+                    chatAreaEl.classList.remove('hidden');
+                } else {
+                    sidebarEl.classList.remove('hidden');
+                    sidebarEl.classList.add('w-full');
+                    chatAreaEl.classList.add('hidden');
+                }
+            }
+        });
+
+        // Escape Key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && currentWaId) {
+                currentWaId = null;
+                if (window.innerWidth >= 768) {
+                    noChatEl.classList.remove('hidden');
+                    activeChatEl.classList.add('hidden');
+                    activeChatEl.classList.remove('flex');
+                } else {
+                    sidebarEl.classList.remove('hidden');
+                    sidebarEl.classList.add('w-full');
+                    chatAreaEl.classList.add('hidden');
+                    chatAreaEl.classList.remove('flex');
+                }
+                const searchInput = document.getElementById('search-input');
+                if (searchInput) {
+                    searchInput.dispatchEvent(new Event('input'));
+                } else {
+                    // Fallback jika input tidak ditemukan
+                    renderContacts(cachedContacts); 
+                }
+            }
+        });
+
+        // Ambil elemen input
+        const searchInput = document.getElementById('search-input');
+
+        // Tambahkan event listener untuk mendeteksi ketikan (real-time)
+        searchInput.addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase(); // Ubah ke huruf kecil agar tidak case-sensitive
+
+            // Filter array cachedContacts
+            const filteredContacts = cachedContacts.filter(contact => {
+                // Cek kecocokan di Nama ATAU Nomor (waId)
+                const nameMatch = (contact.name || "").toLowerCase().includes(searchTerm);
+                const numberMatch = (contact.waId || "").toLowerCase().includes(searchTerm);
+                
+                return nameMatch || numberMatch;
+            });
+
+            // Render ulang daftar kontak dengan hasil filter
+            renderContacts(filteredContacts);
+        });
+
+        // Initial Load
+        loadContacts();
+
+    </script>
+</body>
+</html>

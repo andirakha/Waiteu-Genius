@@ -1,0 +1,29 @@
+{
+  "name": "waiteu-genius",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "@prisma/client": "^5.22.0",
+    "axios": "^1.13.2",
+    "body-parser": "^2.2.0",
+    "dotenv": "^17.2.3",
+    "ejs": "^3.1.10",
+    "express": "^5.1.0",
+    "fuse.js": "^7.1.0",
+    "node-fetch": "^3.3.2",
+    "pdf-parse": "^1.1.1",
+    "socket.io": "^4.8.1"
+  },
+  "devDependencies": {
+    "prisma": "^5.22.0"
+  }
+}

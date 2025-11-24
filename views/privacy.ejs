@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kebijakan Privasi - Waiteu Genius</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Konfigurasi Tailwind untuk mengenali CSS Variables Anda -->
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        border: "var(--border)",
+                        input: "var(--input)",
+                        ring: "var(--ring)",
+                        background: "var(--background)",
+                        foreground: "var(--foreground)",
+                        primary: {
+                            DEFAULT: "var(--primary)",
+                            foreground: "var(--primary-foreground)",
+                        },
+                        secondary: {
+                            DEFAULT: "var(--secondary)",
+                            foreground: "var(--secondary-foreground)",
+                        },
+                        destructive: {
+                            DEFAULT: "var(--destructive)",
+                            foreground: "var(--destructive-foreground)",
+                        },
+                        muted: {
+                            DEFAULT: "var(--muted)",
+                            foreground: "var(--muted-foreground)",
+                        },
+                        accent: {
+                            DEFAULT: "var(--accent)",
+                            foreground: "var(--accent-foreground)",
+                        },
+                        popover: {
+                            DEFAULT: "var(--popover)",
+                            foreground: "var(--popover-foreground)",
+                        },
+                        card: {
+                            DEFAULT: "var(--card)",
+                            foreground: "var(--card-foreground)",
+                        },
+                    },
+                    borderRadius: {
+                        lg: "var(--radius)",
+                        md: "calc(var(--radius) - 2px)",
+                        sm: "calc(var(--radius) - 4px)",
+                    },
+                },
+            },
+        }
+    </script>
+
+    <!-- CSS Variables Asli dari Request Anda -->
+    <style>
+        :root {
+            /* Updated color scheme with custom WhatsApp-inspired theme */
+            --background: #ffebf2;
+            --foreground: #1a1a1a;
+            --card: #ffffff;
+            --card-foreground: #1a1a1a;
+            --popover: #ffffff;
+            --popover-foreground: #1a1a1a;
+            --primary: #c81d25;
+            --primary-foreground: #ffffff;
+            --secondary: #d98fa3;
+            --secondary-foreground: #ffffff;
+            --muted: #f2c5d5;
+            --muted-foreground: #666666;
+            --accent: #d93845;
+            --accent-foreground: #ffffff;
+            --destructive: #d93845;
+            --destructive-foreground: #ffffff;
+            --border: #f2c5d5;
+            --input: #ffffff;
+            --ring: #d93845;
+            --chart-1: #c81d25;
+            --chart-2: #d93845;
+            --chart-3: #d98fa3;
+            --chart-4: #f2c5d5;
+            --chart-5: #ffebf2;
+            --radius: 0.5rem;
+            --sidebar: #ffffff;
+            --sidebar-foreground: #1a1a1a;
+            --sidebar-primary: #c81d25;
+            --sidebar-primary-foreground: #ffffff;
+            --sidebar-accent: #f2c5d5;
+            --sidebar-accent-foreground: #1a1a1a;
+            --sidebar-border: #f2c5d5;
+            --sidebar-ring: #d93845;
+        }
+
+        .dark {
+            --background: #1a1a1a;
+            --foreground: #ffffff;
+            --card: #2a2a2a;
+            --card-foreground: #ffffff;
+            --popover: #2a2a2a;
+            --popover-foreground: #ffffff;
+            --primary: #d93845;
+            --primary-foreground: #ffffff;
+            --secondary: #d98fa3;
+            --secondary-foreground: #ffffff;
+            --muted: #3a3a3a;
+            --muted-foreground: #999999;
+            --accent: #f2c5d5;
+            --accent-foreground: #1a1a1a;
+            --destructive: #d93845;
+            --destructive-foreground: #ffffff;
+            --border: #3a3a3a;
+            --input: #2a2a2a;
+            --ring: #d93845;
+            --chart-1: #d93845;
+            --chart-2: #d98fa3;
+            --chart-3: #f2c5d5;
+            --chart-4: #c81d25;
+            --chart-5: #ffebf2;
+            --sidebar: #2a2a2a;
+            --sidebar-foreground: #ffffff;
+            --sidebar-primary: #d93845;
+            --sidebar-primary-foreground: #ffffff;
+            --sidebar-accent: #3a3a3a;
+            --sidebar-accent-foreground: #ffffff;
+            --sidebar-border: #3a3a3a;
+            --sidebar-ring: #d93845;
+        }
+
+        /* Base styles application */
+        * {
+            border-color: var(--border);
+        }
+        body {
+            background-color: var(--background);
+            color: var(--foreground);
+            font-family: "Geist", "Geist Fallback", sans-serif;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-background text-foreground antialiased">
+
+    <!-- Header -->
+    <div class="bg-primary text-primary-foreground sticky top-0 z-10 shadow">
+        <div class="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
+            <div>
+                <h1 class="text-2xl font-bold">Kebijakan Privasi</h1>
+                <p class="text-sm text-primary-foreground/80">Waiteu Genius</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Content -->
+    <div class="max-w-4xl mx-auto px-6 py-12">
+        <div class="bg-card rounded-lg shadow-sm p-8 space-y-8">
+            <!-- Last Updated -->
+            <div class="text-sm text-muted-foreground border-b border-border pb-4">
+                Terakhir Diperbarui: <span class="font-medium text-foreground">24 November 2025</span>
+            </div>
+
+            <!-- Section 1: Pendahuluan -->
+            <section class="space-y-4">
+                <h2 class="text-2xl font-bold text-primary">1. Pendahuluan</h2>
+                <p class="text-foreground leading-relaxed">
+                    Selamat datang di Waiteu Genius. Layanan ini adalah Chatbot WhatsApp cerdas yang
+                    dirancang untuk membantu pelanggan mendapatkan informasi produk Laili Waiteu dan membantu proses
+                    pengecekan ongkos kirim.
+                </p>
+                <p class="text-foreground leading-relaxed">
+                    Dengan menggunakan layanan chatbot ini, Anda menyetujui praktik data yang dijelaskan dalam kebijakan ini.
+                </p>
+            </section>
+
+            <!-- Section 2: Data yang Kami Kumpulkan -->
+            <section class="space-y-4">
+                <h2 class="text-2xl font-bold text-primary">2. Data yang Kami Kumpulkan</h2>
+                <p class="text-foreground leading-relaxed">
+                    Agar chatbot dapat berfungsi dengan baik, kami mengumpulkan dan memproses informasi berikut secara
+                    otomatis saat Anda mengirim pesan ke nomor WhatsApp kami:
+                </p>
+                <ul class="space-y-3 ml-4">
+                    <li class="flex gap-3">
+                        <span class="text-primary font-bold flex-shrink-0">•</span>
+                        <span class="text-foreground">
+                            <span class="font-semibold">Informasi Profil:</span> Nama profil WhatsApp dan Nomor Telepon (ID
+                            WhatsApp) Anda.
+                        </span>
+                    </li>
+                    <li class="flex gap-3">
+                        <span class="text-primary font-bold flex-shrink-0">•</span>
+                        <span class="text-foreground">
+                            <span class="font-semibold">Isi Percakapan:</span> Teks pesan yang Anda kirimkan untuk diproses
+                            oleh AI kami.
+                        </span>
+                    </li>
+                    <li class="flex gap-3">
+                        <span class="text-primary font-bold flex-shrink-0">•</span>
+                        <span class="text-foreground">
+                            <span class="font-semibold">Informasi Pengiriman:</span> Alamat, kecamatan, dan kota yang Anda
+                            berikan secara sukarela untuk keperluan pengecekan ongkos kirim.
+                        </span>
+                    </li>
+                    <li class="flex gap-3">
+                        <span class="text-primary font-bold flex-shrink-0">•</span>
+                        <span class="text-foreground">
+                            <span class="font-semibold">Riwayat Interaksi:</span> Waktu dan tanggal pesan dikirim untuk
+                            menjaga konteks percakapan.
+                        </span>
+                    </li>
+                </ul>
+            </section>
+
+            <!-- Section 3: Bagaimana Kami Menggunakan Data -->
+            <section class="space-y-4">
+                <h2 class="text-2xl font-bold text-primary">3. Bagaimana Kami Menggunakan Data Anda</h2>
+                <p class="text-foreground leading-relaxed">Kami menggunakan informasi tersebut untuk tujuan berikut:</p>
+                <ul class="space-y-3 ml-4">
+                    <li class="flex gap-3">
+                        <span class="text-primary font-bold flex-shrink-0">•</span>
+                        <span class="text-foreground">
+                            <span class="font-semibold">Membalas Pesan:</span> Memberikan respons otomatis terkait pertanyaan
+                            produk menggunakan teknologi kecerdasan buatan (AI).
+                        </span>
+                    </li>
+                    <li class="flex gap-3">
+                        <span class="text-primary font-bold flex-shrink-0">•</span>
+                        <span class="text-foreground">
+                            <span class="font-semibold">Kalkulasi Ongkir:</span> Menghitung estimasi biaya pengiriman
+                            menggunakan layanan pihak ketiga (RajaOngkir) berdasarkan alamat yang Anda input.
+                        </span>
+                    </li>
+                    <li class="flex gap-3">
+                        <span class="text-primary font-bold flex-shrink-0">•</span>
+                        <span class="text-foreground">
+                            <span class="font-semibold">Peningkatan Layanan:</span> Menganalisis riwayat percakapan untuk
+                            meningkatkan akurasi jawaban bot di masa mendatang.
+                        </span>
+                    </li>
+                </ul>
+            </section>
+
+            <!-- Section 4: Layanan Pihak Ketiga -->
+            <section class="space-y-4">
+                <h2 class="text-2xl font-bold text-primary">4. Layanan Pihak Ketiga (Third-Party Services)</h2>
+                <p class="text-foreground leading-relaxed">
+                    Untuk menyediakan layanan ini, data tertentu mungkin diproses oleh penyedia layanan pihak ketiga berikut:
+                </p>
+                <ul class="space-y-3 ml-4">
+                    <li class="flex gap-3">
+                        <span class="text-primary font-bold flex-shrink-0">•</span>
+                        <span class="text-foreground">
+                            <span class="font-semibold">Meta Platforms, Inc. (WhatsApp):</span> Sebagai penyedia platform
+                            pesan.
+                        </span>
+                    </li>
+                    <li class="flex gap-3">
+                        <span class="text-primary font-bold flex-shrink-0">•</span>
+                        <span class="text-foreground">
+                            <span class="font-semibold">Google (Generative AI):</span> Isi pesan Anda diproses oleh Google AI
+                            untuk menghasilkan jawaban yang relevan.
+                        </span>
+                    </li>
+                    <li class="flex gap-3">
+                        <span class="text-primary font-bold flex-shrink-0">•</span>
+                        <span class="text-foreground">
+                            <span class="font-semibold">RajaOngkir:</span> Data kecamatan/kota Anda digunakan semata-mata
+                            untuk mengambil data biaya pengiriman.
+                        </span>
+                    </li>
+                </ul>
+            </section>
+
+            <!-- Section 5: Ketentuan Layanan -->
+            <section class="space-y-4">
+                <h2 class="text-2xl font-bold text-primary">5. Ketentuan Layanan (Terms of Service)</h2>
+                <ul class="space-y-4 ml-4">
+                    <li class="flex gap-3">
+                        <span class="text-primary font-bold flex-shrink-0">•</span>
+                        <span class="text-foreground">
+                            <span class="font-semibold">Penggunaan Wajar:</span> Anda setuju untuk tidak menggunakan layanan
+                            ini untuk mengirim spam, konten ilegal, atau pesan yang melanggar kebijakan WhatsApp.
+                        </span>
+                    </li>
+                    <li class="flex gap-3">
+                        <span class="text-primary font-bold flex-shrink-0">•</span>
+                        <span class="text-foreground">
+                            <span class="font-semibold">Akurasi Informasi:</span> Jawaban yang diberikan oleh "Waiteu Genius"
+                            dihasilkan oleh AI. Meskipun kami berusaha menjaga akurasi, kemungkinan kesalahan (halusinasi AI)
+                            tetap ada. Informasi ongkos kirim adalah estimasi dan dapat berubah sesuai kebijakan ekspedisi.
+                        </span>
+                    </li>
+                    <li class="flex gap-3">
+                        <span class="text-primary font-bold flex-shrink-0">•</span>
+                        <span class="text-foreground">
+                            <span class="font-semibold">Ketersediaan:</span> Kami tidak menjamin layanan ini akan selalu aktif
+                            24/7 tanpa gangguan.
+                        </span>
+                    </li>
+                </ul>
+            </section>
+
+            <!-- Section 6: Instruksi Penghapusan Data -->
+            <section class="space-y-4">
+                <h2 class="text-2xl font-bold text-primary">
+                    6. Instruksi Penghapusan Data (User Data Deletion Instructions)
+                </h2>
+                <p class="text-foreground leading-relaxed">
+                    Sesuai dengan kebijakan Meta dan GDPR, Anda memiliki hak untuk meminta penghapusan data pribadi Anda
+                    (Nomor Telepon dan Riwayat Chat) dari database kami.
+                </p>
+                <p class="text-foreground leading-relaxed">
+                    Jika Anda ingin menghapus data Anda, silakan ikuti langkah berikut:
+                </p>
+                <ol class="space-y-3 ml-4 list-decimal">
+                    <li class="text-foreground">
+                        Kirim email ke:
+                        <span class="font-mono bg-muted px-2 py-1 rounded">[MASUKKAN EMAIL ANDA DISINI]</span>
+                    </li>
+                    <li class="text-foreground">
+                        Gunakan Subjek Email: <span class="font-semibold">Permintaan Penghapusan Data WhatsApp</span>
+                    </li>
+                    <li class="text-foreground">
+                        Di dalam isi email, sertakan Nomor WhatsApp yang Anda gunakan saat berinteraksi dengan bot.
+                    </li>
+                    <li class="text-foreground">
+                        Kami akan memproses penghapusan data Anda dari server kami dalam waktu 7x24 jam setelah permintaan
+                        diverifikasi.
+                    </li>
+                </ol>
+            </section>
+
+            <!-- Section 7: Hubungi Kami -->
+            <section class="space-y-4">
+                <h2 class="text-2xl font-bold text-primary">7. Hubungi Kami</h2>
+                <p class="text-foreground leading-relaxed">
+                    Jika Anda memiliki pertanyaan mengenai Kebijakan Privasi ini, silakan hubungi kami melalui email di
+                    <span class="font-mono bg-muted px-2 py-1 rounded">[MASUKKAN EMAIL ANDA DISINI]</span>.
+                </p>
+            </section>
+
+            <!-- Footer -->
+            <div class="border-t border-border pt-8 mt-8 text-center text-sm text-muted-foreground">
+                <p>© 2025 Waiteu Genius. All rights reserved.</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

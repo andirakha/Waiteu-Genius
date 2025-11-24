@@ -1,0 +1,100 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+// Generator dan Datasource
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql" // Pastikan sesuai DB Anda
+  url      = env("DATABASE_URL")
+}
+
+// Enums
+enum ConversationStatus {
+  OPEN
+  CLOSED
+}
+
+enum MessageDirection {
+  INCOMING
+  OUTGOING
+}
+
+enum MessageType {
+  TEXT
+  IMAGE
+  AUDIO
+  VIDEO
+  DOCUMENT
+  LOCATION
+  BUTTON_REPLY
+  INTERACTIVE
+}
+
+// Model Contact
+model Contact {
+  id              Int      @id @default(autoincrement())
+  waId            String   @unique
+  phone           String
+  name            String?
+  profilePic      String?
+  lastInteraction DateTime @default(now())
+  createdAt       DateTime @default(now())
+
+  // --- [BARU] Relasi ke Pesan Terakhir ---
+  // Kita simpan ID pesan terakhir di sini agar aksesnya Cepat (O(1))
+  lastMessageId   Int?     @unique 
+  lastMessage     Message? @relation("LastMessageRef", fields: [lastMessageId], references: [id])
+  // --------------------------------------
+
+  // Relasi lama
+  conversations   Conversation[]
+  messages        Message[]
+}
+
+// Model Conversation
+model Conversation {
+  id             Int                @id @default(autoincrement())
+  status         ConversationStatus @default(OPEN)
+  startedAt      DateTime           @default(now())
+  endedAt        DateTime?
+
+  contactWaId    String
+  contact        Contact            @relation(fields: [contactWaId], references: [waId])
+
+  messages       Message[]
+}
+
+// Model Message
+model Message {
+  id             Int              @id @default(autoincrement())
+  waMessageId    String?          @unique
+  
+  direction      MessageDirection
+  type           MessageType      @default(TEXT)
+  
+  text           String?          @db.Text
+  mediaUrl       String?
+  mediaId        String?
+  fileName       String?
+  payload        String?
+  title          String?
+  isRead         Boolean          @default(false)
+  timestamp      DateTime         @default(now())
+
+  conversationId Int
+  conversation   Conversation     @relation(fields: [conversationId], references: [id])
+
+  contactWaId    String
+  contact        Contact          @relation(fields: [contactWaId], references: [waId])
+
+  // --- [BARU] Back-Relation untuk Last Message ---
+  // Diperlukan Prisma untuk melengkapi relasi One-to-One dari Contact
+  lastMessageFor Contact?         @relation("LastMessageRef")
+  // ---------------------------------------------
+}
