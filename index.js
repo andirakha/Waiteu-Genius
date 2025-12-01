@@ -5,6 +5,8 @@ require('dotenv').config();
 
 const express = require('express');
 const bodyParser = require('body-parser');
+const basicAuth = require('express-basic-auth');
+const cookieParser = require('cookie-parser');
 
 const webhookRouter = require('./webhook');
 const dashboardRouter = require('./dashboard');
@@ -12,7 +14,12 @@ const privacyRouter = require('./privacy');
 
 const app = express();
 app.set('view engine', 'ejs');
-app.use(bodyParser.json());
+app.use(bodyParser.json({
+  verify: (req, res, buf) => {
+    req.rawBody = buf;
+  }
+}));
+app.use(cookieParser());
 
 // 2. Import Module Wajib
 const http = require('http');
@@ -30,6 +37,37 @@ const PORT = process.env.PORT || 3000; // Railway akan mengisi PORT ini otomatis
 const server = http.createServer(app);
 const io = new Server(server);
 
+// BASIC AUTH untuk Dashboard Admin
+const basicAuthMiddleware = basicAuth({
+    users: { 
+        [process.env.ADMIN_USER || 'admin']: process.env.ADMIN_PASS || 'rahasia123' 
+    },
+    challenge: true,
+    unauthorizedResponse: 'Akses Ditolak: Password salah atau sesi habis.'
+});
+
+// Middleware untuk proteksi dashboard dengan sesi cookie + Basic Auth
+const sessionAuth = (req, res, next) => {
+    // 1. Cek apakah user punya cookie 'dashboard_session' yang valid
+    if (req.cookies.dashboard_session) {
+        // Jika cookie ada, berarti dia sudah login < 24 jam yang lalu. Loloskan.
+        return next();
+    }
+
+    // 2. Jika tidak ada cookie (atau expired), jalankan Basic Auth
+    basicAuthMiddleware(req, res, () => {
+        // 3. Jika Basic Auth sukses (password benar), kita SET cookie baru
+        // MaxAge: 24 jam * 60 menit * 60 detik * 1000 ms = 86400000 ms
+        res.cookie('dashboard_session', 'active', { 
+            maxAge: 24 * 60 * 60 * 1000, 
+            httpOnly: true // Aman, tidak bisa diakses JS browser
+        });
+        
+        // Lanjut ke dashboard
+        next();
+    });
+};
+
 // 6. SETUP DEPENDENCY INJECTION (PENTING)
 // Kita simpan 'io' dan 'prisma' ke dalam 'app' agar bisa diakses di file lain (webhook.js / dashboard.js)
 // Cara pakainya nanti di file lain: const prisma = req.app.get('prisma');
@@ -37,7 +75,7 @@ app.set('io', io);
 app.set('prisma', prisma);
 
 app.use('/', webhookRouter);
-app.use('/dashboard', dashboardRouter);
+app.use('/dashboard', sessionAuth, dashboardRouter);
 app.use('/privacy', privacyRouter);
 
 // Event debug saat Dashboard terkoneksi

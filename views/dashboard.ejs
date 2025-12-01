@@ -212,7 +212,7 @@
             if (diffDays === 0) {
                 return date.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
             } else if (diffDays === 1) {
-                return "Yesterday";
+                return "Kemarin";
             } else {
                 return date.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
             }
@@ -509,15 +509,108 @@
         }
 
         // Helper untuk append pesan baru dari Socket tanpa reload semua
+        // Fungsi append tanpa reload (Anti-Flicker)
+        // Fungsi append tanpa reload + Smart Auto Scroll
         function appendSingleMessageToUI(msg) {
-            // Cek apakah perlu date separator baru (sederhana: cek elemen terakhir)
-            // Untuk simplifikasi, kita reload saja loadMessages jika ingin rapi, 
-            // tapi untuk performa kita append manual.
-            // Disini kita gunakan cara simple: reloadMessages() agar grouping tanggal aman.
-            // Alternatif: appendChild manual.
+            const container = messagesContainerEl;
+
+            // --- [LOGIKA 1] Deteksi Posisi Scroll Sebelum Pesan Masuk ---
+            // Hitung jarak user dari posisi paling bawah
+            const distanceToBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
             
-            // Kita fetch ulang saja agar urutan dan tanggal pasti benar
-            loadMessages(currentWaId); 
+            // Anggap user "di bawah" jika jaraknya kurang dari 100px (toleransi sedikit scroll ke atas)
+            const isUserAtBottom = distanceToBottom < 100;
+
+            // --- [LOGIKA 2] Render Pesan (Sama seperti sebelumnya) ---
+            
+            // Cek kosong
+            const isEmpty = container.innerHTML.trim() === '' || container.innerText === 'No messages yet.';
+            if (isEmpty) {
+                container.innerHTML = ''; 
+                container.style.visibility = 'visible';
+            }
+
+            // Cek Grouping Tanggal
+            const dateLabel = getDateLabel(msg.timestamp);
+            const existingDateLabels = container.querySelectorAll('span.bg-background.px-2');
+            const lastDateLabel = existingDateLabels.length > 0 ? existingDateLabels[existingDateLabels.length - 1].innerText : null;
+
+            let targetWrapper = container.lastElementChild;
+            
+            if (dateLabel !== lastDateLabel) {
+                const separator = document.createElement('div');
+                separator.className = "flex items-center justify-center gap-3 my-4";
+                separator.innerHTML = `
+                    <div class="flex-1 h-px bg-border"></div>
+                    <span class="text-xs text-muted-foreground font-medium bg-background px-2">${dateLabel}</span>
+                    <div class="flex-1 h-px bg-border"></div>
+                `;
+                container.appendChild(separator);
+
+                const newWrapper = document.createElement('div');
+                newWrapper.className = "space-y-2";
+                container.appendChild(newWrapper);
+                targetWrapper = newWrapper;
+            } 
+            else if (!targetWrapper || !targetWrapper.classList.contains('space-y-2')) {
+                const newWrapper = document.createElement('div');
+                newWrapper.className = "space-y-2";
+                container.appendChild(newWrapper);
+                targetWrapper = newWrapper;
+            }
+
+            // Buat Bubble
+            const dir = (msg.direction || "").toLowerCase();
+            const isSent = dir === 'outgoing';
+
+            const bubbleWrapper = document.createElement('div');
+            bubbleWrapper.className = `flex ${isSent ? "justify-end" : "justify-start"} gap-2`;
+
+            const bubble = document.createElement('div');
+            bubble.style.opacity = '0'; 
+            bubble.style.transform = 'translateY(10px)';
+            bubble.style.transition = 'all 0.3s ease-out';
+
+            bubble.className = `max-w-[75%] md:max-w-[75%] px-4 py-2 rounded-2xl ${
+                isSent ? "bg-primary text-primary-foreground rounded-br-none" : "bg-muted text-foreground rounded-bl-none"
+            }`;
+
+            const time = new Date(msg.timestamp).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+            let content = msg.text ? processLongMessage(msg.text) : '<i>(No Text)</i>';
+
+            const typeLower = (msg.type || "text").toLowerCase();
+            if (typeLower !== 'text') {
+                content = `<span class="text-xs font-bold uppercase block mb-1 opacity-75">[${msg.type}]</span> ${content}`;
+            }
+
+            bubble.innerHTML = `
+                <div class="break-words text-sm msg-content">${content}</div>
+                <p class="text-[10px] mt-1 opacity-70 text-right">${time}</p>
+            `;
+
+            bubbleWrapper.appendChild(bubble);
+            targetWrapper.appendChild(bubbleWrapper);
+
+            // Animasi Masuk
+            requestAnimationFrame(() => {
+                bubble.style.opacity = '1';
+                bubble.style.transform = 'translateY(0)';
+            });
+
+            // --- [LOGIKA 3] Eksekusi Smart Scroll ---
+            // Hanya scroll jika user sebelumnya memang sedang berada di bawah
+            if (isUserAtBottom) {
+                setTimeout(() => {
+                    container.scrollTo({
+                        top: container.scrollHeight,
+                        behavior: 'smooth'
+                    });
+                }, 50);
+            } else {
+                // OPSIONAL: Jika ingin menambahkan notifikasi "Pesan Baru ⬇" saat user sedang scroll di atas
+                // Anda bisa memanipulasi DOM tombol notifikasi di sini (jika ada).
+                console.log("Pesan baru masuk, tapi user sedang membaca chat lama. Tidak melakukan scroll.");
+            }
         }
 
         // --- EVENT LISTENERS ---

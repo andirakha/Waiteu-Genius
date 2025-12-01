@@ -1,7 +1,7 @@
 // webhook.js
 
 const express = require("express");
-const bodyParser = require("body-parser");
+const crypto = require("crypto");
 const axios = require("axios");
 const { generateResponse } = require("./gen_ai");
 
@@ -11,6 +11,43 @@ const router = express.Router();
 const TOKEN = process.env.WHATSAPP_TOKEN;
 const PHONE_NUMBER_ID = process.env.WHATSAPP_PHONE_NUMBER_ID;
 const VERIFY_TOKEN = process.env.VERIFY_TOKEN;
+const APP_SECRET = process.env.WHATSAPP_APP_SECRET;
+
+// Fungsi ini akan mencegat setiap pesan masuk.
+// Jika bukan dari WhatsApp asli, pesan akan ditolak langsung.
+function validateSignature(req, res, next) {
+    const signature = req.headers['x-hub-signature-256'];
+
+    if (!signature) {
+        console.warn("⚠️ Peringatan: Request tanpa signature ditolak.");
+        return res.status(401).send("Signature missing");
+    }
+
+    if (!req.rawBody) {
+        return res.status(500).send("Raw body missing (Check index.js config)");
+    }
+
+    // Buat hash dari body pesan menggunakan App Secret kita
+    const hash = crypto
+        .createHmac('sha256', APP_SECRET)
+        .update(req.rawBody)
+        .digest('hex');
+
+    // Bandingkan hash kita dengan signature dari Meta
+    const expectedSignature = `sha256=${hash}`;
+
+    // Menggunakan timingSafeEqual agar aman dari serangan waktu (timing attacks)
+    const trusted = Buffer.from(signature, 'utf8');
+    const untrusted = Buffer.from(expectedSignature, 'utf8');
+
+    if (trusted.length !== untrusted.length || !crypto.timingSafeEqual(trusted, untrusted)) {
+        console.error("⛔ Bahaya: Signature tidak cocok! Request palsu ditolak.");
+        return res.status(403).send("Invalid signature");
+    }
+
+    // Jika lolos, lanjut ke proses berikutnya
+    next();
+}
 
 // =============== VERIFIKASI WEBHOOK ===============
 router.get("/webhook", (req, res) => {
@@ -29,7 +66,7 @@ router.get("/webhook", (req, res) => {
 });
 
 // =============== ENDPOINT UTAMA WEBHOOK ===============
-router.post("/webhook", async (req, res) => {
+router.post("/webhook", validateSignature, async (req, res) => {
   const body = req.body;
   // Ambil instance Prisma yang sudah di-inject dari index.js
   const prisma = req.app.get('prisma'); 
